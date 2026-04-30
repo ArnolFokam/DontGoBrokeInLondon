@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#f5fbfa] px-4 py-5 text-[#063b43] sm:px-6">
-      <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-[#f8fffe] shadow-[0_30px_100px_rgba(6,59,67,0.12)]">
+    <main className="flex min-h-screen items-center bg-[#f5fbfa] px-4 py-5 text-[#063b43] sm:px-6">
+      <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[2rem] bg-[#f8fffe] shadow-[0_30px_100px_rgba(6,59,67,0.12)]">
         <nav className="flex items-center justify-between px-5 py-5 sm:px-8">
           <div className="flex items-center gap-2 text-sm font-black tracking-[-0.02em]">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#073f4a] text-white">

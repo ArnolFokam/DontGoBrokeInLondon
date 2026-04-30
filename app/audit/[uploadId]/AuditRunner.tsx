@@ -1,0 +1,217 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import type { AuditCheckResult, AuditStreamEvent } from "@/lib/audit-types";
+
+type SavedReport = {
+  status: string;
+  overallScore: number | null;
+  checks: AuditCheckResult[];
+} | null;
+
+export default function AuditRunner({ uploadId }: { uploadId: string }) {
+  const [isRunning, setIsRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [quote, setQuote] = useState("Ready when you are. London is already warming up.");
+  const [currentStep, setCurrentStep] = useState("Waiting to start");
+  const [results, setResults] = useState<AuditCheckResult[]>([]);
+  const [overallScore, setOverallScore] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadReport() {
+      const response = await fetch(`/api/audit/${uploadId}`);
+      const data = (await response.json()) as { report: SavedReport };
+      if (!data.report) return;
+
+      setResults(data.report.checks);
+      setOverallScore(data.report.overallScore);
+      setProgress(data.report.status === "completed" ? 100 : 0);
+      setCurrentStep(
+        data.report.status === "completed"
+          ? "Audit completed"
+          : `${data.report.checks.length} checks saved`,
+      );
+    }
+
+    void loadReport();
+  }, [uploadId]);
+
+  async function runAudit() {
+    setIsRunning(true);
+    setError(null);
+    setResults([]);
+    setOverallScore(null);
+    setProgress(0);
+
+    const response = await fetch(`/api/audit/${uploadId}/run`, {
+      method: "POST",
+    });
+
+    if (!response.body) {
+      setIsRunning(false);
+      setError("Could not start audit stream.");
+      return;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const chunks = buffer.split("\n\n");
+      buffer = chunks.pop() ?? "";
+
+      for (const chunk of chunks) {
+        const line = chunk.split("\n").find((entry) => entry.startsWith("data: "));
+        if (!line) continue;
+        handleEvent(JSON.parse(line.slice(6)) as AuditStreamEvent);
+      }
+    }
+
+    setIsRunning(false);
+  }
+
+  function handleEvent(event: AuditStreamEvent) {
+    setProgress(event.progress);
+
+    if ("quote" in event) {
+      setQuote(event.quote);
+    }
+
+    if (event.type === "audit_started") {
+      setCurrentStep("Starting audit");
+    }
+
+    if (event.type === "check_started") {
+      setCurrentStep(`${event.checkIndex} / ${event.totalChecks}: ${event.title}`);
+    }
+
+    if (event.type === "check_progress") {
+      setCurrentStep(event.message);
+    }
+
+    if (event.type === "check_completed") {
+      setResults((current) => [...current, event.result]);
+      setCurrentStep(`${event.checkIndex} / ${event.totalChecks}: ${event.result.title} complete`);
+    }
+
+    if (event.type === "audit_completed") {
+      setOverallScore(event.overallScore);
+      setCurrentStep("Audit completed");
+    }
+
+    if (event.type === "audit_failed") {
+      setError(event.message);
+      setCurrentStep("Audit failed");
+      setIsRunning(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-[#f5fbfa] px-4 py-6 text-[#063b43] sm:px-6">
+      <section className="mx-auto max-w-5xl space-y-5">
+        <div className="rounded-[1.75rem] border border-[#dcebe9] bg-white p-6 shadow-[0_30px_100px_rgba(6,59,67,0.12)] sm:p-8">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-[#0a6b70]">
+                Audit workspace
+              </p>
+              <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-[#083b43] sm:text-5xl">
+                London survival audit
+              </h1>
+            </div>
+            <button
+              type="button"
+              onClick={runAudit}
+              disabled={isRunning}
+              className="rounded-full bg-[#073f4a] px-6 py-3 text-sm font-black text-white transition hover:bg-[#0a5663] disabled:bg-[#d8e8e6] disabled:text-[#90a8ab]"
+            >
+              {isRunning ? "Running..." : results.length ? "Run again" : "Run audit"}
+            </button>
+          </div>
+
+          <div className="mt-8">
+            <div className="mb-2 flex items-center justify-between text-sm font-black text-[#527176]">
+              <span>{currentStep}</span>
+              <span>{progress}%</span>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-[#e2f3f1]">
+              <div
+                className="h-full rounded-full bg-[#073f4a] transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="mt-4 rounded-[1.25rem] bg-[#f5fbfa] p-4 text-sm font-black text-[#0a6b70]">
+              {quote}
+            </p>
+          </div>
+
+          {overallScore !== null && (
+            <div className="mt-6 rounded-[1.25rem] bg-[#073f4a] p-5 text-white">
+              <p className="text-sm font-bold text-white/70">Overall score</p>
+              <p className="mt-1 text-5xl font-black tracking-[-0.06em]">
+                {overallScore}%
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-5 rounded-2xl border border-[#fecaca] bg-[#fff1f2] p-4 text-sm font-black text-[#be123c]">
+              {error}
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          {results.map((result) => (
+            <article
+              key={result.checkId}
+              className="rounded-[1.5rem] border border-[#dcebe9] bg-white p-5"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-black tracking-[-0.02em]">
+                    {result.title}
+                  </h2>
+                  <p className="mt-1 text-sm font-medium leading-6 text-[#6f898d]">
+                    {result.summary}
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#eef7f6] px-3 py-2 text-sm font-black text-[#0a6b70]">
+                  {result.score}%
+                </span>
+              </div>
+
+              {result.evidence.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {result.evidence.map((item) => (
+                    <div
+                      key={`${item.label}-${item.value}`}
+                      className="flex justify-between gap-4 rounded-2xl bg-[#fbfffe] px-4 py-3 text-sm"
+                    >
+                      <span className="font-bold text-[#527176]">{item.label}</span>
+                      <span className="text-right font-black text-[#083b43]">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {result.recommendations.length > 0 && (
+                <ul className="mt-4 space-y-2 text-sm font-medium leading-6 text-[#527176]">
+                  {result.recommendations.map((recommendation) => (
+                    <li key={recommendation}>• {recommendation}</li>
+                  ))}
+                </ul>
+              )}
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
