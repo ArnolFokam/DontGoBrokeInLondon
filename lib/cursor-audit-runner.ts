@@ -1,5 +1,6 @@
 import { AUDIT_CHECKS, type AuditCheckDefinition } from "@/lib/audit-checks";
 import { getAuditCopy } from "@/lib/audit-copy";
+import { clampScore, ratingForScore } from "@/lib/audit-grades";
 import {
   completeAuditRun,
   createAuditRun,
@@ -7,10 +8,10 @@ import {
   saveAuditCheckResult,
 } from "@/lib/audit-report";
 import { getAuditToolData } from "@/lib/audit-tools";
+import { runCursorPrompt } from "@/lib/cursor-sdk-adapter";
 import type {
   AuditCheckResult,
   AuditPhase,
-  AuditRating,
   AuditStreamEvent,
 } from "@/lib/audit-types";
 
@@ -145,79 +146,8 @@ function progressFor(completedChecks: number, currentCheckProgress: number) {
 }
 
 async function runCursorCheck(check: AuditCheckDefinition, data: ToolData) {
-  if (!hasCursorKey()) {
-    throw new Error("CURSOR_API_KEY is required to run the audit.");
-  }
-
-  const { Agent } = (await loadCursorSdk()) as {
-    Agent: {
-      create: (options: {
-        apiKey?: string;
-        model: { id: string };
-        local: { cwd: string };
-      }) => Promise<{
-        send: (
-          message: string,
-          options?: { local?: { force?: boolean } },
-        ) => Promise<{
-          stream: () => AsyncGenerator<{
-            type: string;
-            message?: {
-              content?: Array<{ type: string; text?: string }>;
-            };
-            text?: string;
-          }>;
-          wait: () => Promise<{ result?: string }>;
-        }>;
-        close: () => void;
-      }>;
-    };
-  };
-  const agent = await Agent.create({
-    apiKey: process.env.CURSOR_API_KEY,
-    model: { id: process.env.CURSOR_MODEL ?? "composer-2" },
-    local: { cwd: process.cwd() },
-  });
-
-  try {
-    const run = await agent.send(buildCursorPrompt(check, data), {
-      local: { force: true },
-    });
-    let streamedText = "";
-    for await (const event of run.stream()) {
-      if (event.type === "assistant") {
-        streamedText +=
-          event.message?.content
-            ?.filter((block) => block.type === "text")
-            .map((block) => block.text ?? "")
-            .join("") ?? "";
-      }
-      if (event.type === "task" && event.text) {
-        streamedText += event.text;
-      }
-    }
-    const result = await run.wait();
-    return parseCursorResult(streamedText || result.result || "", check);
-  } finally {
-    agent.close();
-  }
-}
-
-function loadCursorSdk() {
-  const packageName = "@cursor/sdk";
-  const dynamicImport = new Function(
-    "specifier",
-    "return import(specifier)",
-  ) as (specifier: string) => Promise<unknown>;
-
-  return dynamicImport(packageName);
-}
-
-function hasCursorKey() {
-  return Boolean(
-    process.env.CURSOR_API_KEY &&
-      process.env.CURSOR_API_KEY !== "placeholder_for_later",
-  );
+  const rawResult = await runCursorPrompt(buildCursorPrompt(check, data));
+  return parseCursorResult(rawResult, check);
 }
 
 function buildCursorPrompt(check: AuditCheckDefinition, data: ToolData) {
@@ -289,23 +219,11 @@ function normalizeResult(
   };
 }
 
-function clampScore(value: unknown) {
-  const score = typeof value === "number" && Number.isFinite(value) ? value : 0;
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
-
-function isRating(value: unknown): value is AuditRating {
+function isRating(value: unknown): value is AuditCheckResult["rating"] {
   return (
     value === "excellent" ||
     value === "good" ||
     value === "warning" ||
     value === "critical"
   );
-}
-
-function ratingForScore(score: number): AuditRating {
-  if (score >= 85) return "excellent";
-  if (score >= 70) return "good";
-  if (score >= 45) return "warning";
-  return "critical";
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { gradeClass, gradeForScore } from "@/lib/audit-grades";
 import type { AuditCheckResult, AuditStreamEvent } from "@/lib/audit-types";
 
 type SavedReport = {
@@ -8,24 +9,6 @@ type SavedReport = {
   overallScore: number | null;
   checks: AuditCheckResult[];
 } | null;
-
-function gradeForScore(score: number) {
-  if (score >= 90) return "A+";
-  if (score >= 80) return "A";
-  if (score >= 65) return "B";
-  if (score >= 45) return "C";
-  return "F";
-}
-
-function gradeClass(score: number) {
-  const grade = gradeForScore(score);
-
-  if (grade === "A+") return "bg-emerald-100 text-emerald-700 ring-emerald-200";
-  if (grade === "A") return "bg-teal-100 text-teal-700 ring-teal-200";
-  if (grade === "B") return "bg-blue-100 text-blue-700 ring-blue-200";
-  if (grade === "C") return "bg-amber-100 text-amber-700 ring-amber-200";
-  return "bg-rose-100 text-rose-700 ring-rose-200";
-}
 
 export default function AuditRunner({ uploadId }: { uploadId: string }) {
   const [isRunning, setIsRunning] = useState(false);
@@ -142,9 +125,6 @@ export default function AuditRunner({ uploadId }: { uploadId: string }) {
               <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-[#083b43] sm:text-5xl">
                 London survival audit
               </h1>
-              <p className="mx-auto mt-3 max-w-xl text-sm font-medium leading-6 text-[#6f898d]">
-                We run five checks and turn the result into a simple grade.
-              </p>
             </div>
             <button
               type="button"
@@ -167,7 +147,7 @@ export default function AuditRunner({ uploadId }: { uploadId: string }) {
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="mt-5 rounded-[1.25rem] bg-[#f5fbfa] p-5 text-center text-sm font-black leading-6 text-[#0a6b70]">
+            <p className="mt-5 rounded-[1.25rem] bg-[#f5fbfa] p-4 text-center text-sm font-black leading-6 text-[#0a6b70]">
               {quote}
             </p>
           </div>
@@ -209,31 +189,31 @@ export default function AuditRunner({ uploadId }: { uploadId: string }) {
                     </span>
                   </div>
 
-                  <p className="mx-auto mt-3 max-w-2xl text-sm font-medium leading-7 text-[#527176] sm:mx-0">
+                  <p className="mx-auto mt-2 max-w-2xl text-sm font-medium leading-6 text-[#527176] sm:mx-0">
                     {result.summary}
                   </p>
 
                   {result.evidence.length > 0 && (
-                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                      {result.evidence.map((item) => (
+                    <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                      {result.evidence.slice(0, 4).map((item) => (
                         <div
                           key={`${item.label}-${item.value}`}
                           className="rounded-2xl bg-[#fbfffe] px-4 py-3 text-sm"
                         >
-                          <p className="font-bold text-[#6f898d]">{item.label}</p>
-                          <p className="mt-1 font-black text-[#083b43]">{item.value}</p>
+                          <p className="truncate font-bold text-[#6f898d]">{item.label}</p>
+                          <p className="mt-1 truncate font-black text-[#083b43]">{item.value}</p>
                         </div>
                       ))}
                     </div>
                   )}
 
                   {result.recommendations.length > 0 && (
-                    <div className="mt-6 rounded-[1.25rem] bg-[#f5fbfa] p-5">
+                    <div className="mt-5 rounded-[1.25rem] bg-[#f5fbfa] p-4">
                       <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0a6b70]">
-                        Recommendations
+                        Next moves
                       </p>
-                      <ul className="mt-3 space-y-2 text-sm font-medium leading-6 text-[#527176]">
-                        {result.recommendations.map((recommendation) => (
+                      <ul className="mt-3 space-y-1.5 text-sm font-medium leading-6 text-[#527176]">
+                        {result.recommendations.slice(0, 2).map((recommendation) => (
                           <li key={recommendation}>• {recommendation}</li>
                         ))}
                       </ul>
