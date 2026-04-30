@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#f5fbfa] px-4 py-5 text-[#063b43] sm:px-6">
       <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-[#f8fffe] shadow-[0_30px_100px_rgba(6,59,67,0.12)]">
-        <nav className="flex flex-col items-center justify-center gap-4 px-5 py-5 text-center sm:px-8">
+        <nav className="flex items-center justify-between px-5 py-5 sm:px-8">
           <div className="flex items-center gap-2 text-sm font-black tracking-[-0.02em]">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#073f4a] text-white">
               £
@@ -24,22 +24,22 @@ export default function Home() {
           </Link>
         </nav>
 
-        <section className="px-5 pb-12 pt-8 text-center sm:px-8 lg:pb-20 lg:pt-14">
-          <div className="mx-auto max-w-4xl space-y-7">
-            <p className="mx-auto w-fit rounded-full bg-[#e2f3f1] px-4 py-2 text-xs font-black text-[#0a6b70]">
+        <section className="grid gap-10 px-5 pb-12 pt-8 sm:px-8 lg:grid-cols-[1.06fr_0.94fr] lg:items-center lg:pb-20 lg:pt-14">
+          <div className="space-y-7">
+            <p className="w-fit rounded-full bg-[#e2f3f1] px-4 py-2 text-xs font-black text-[#0a6b70]">
               AI financial audit for London life
             </p>
             <div className="space-y-5">
-              <h1 className="mx-auto max-w-4xl text-5xl font-black leading-[0.92] tracking-[-0.055em] text-[#083b43] sm:text-7xl lg:text-8xl">
+              <h1 className="max-w-2xl text-5xl font-black leading-[0.92] tracking-[-0.055em] text-[#083b43] sm:text-7xl lg:text-8xl">
                 Don&apos;t Go Broke in London
               </h1>
-              <p className="mx-auto max-w-2xl text-base font-medium leading-7 text-[#527176] sm:text-lg">
+              <p className="max-w-xl text-base font-medium leading-7 text-[#527176] sm:text-lg">
                 What if an agent could audit your finances and give you
                 financially savvy tips to thrive in one of the most expensive
                 cities in the world?
               </p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/audit"
                 className="rounded-full bg-[#073f4a] px-9 py-5 text-base font-black text-white shadow-[0_22px_56px_rgba(7,63,74,0.3)] transition hover:-translate-y-0.5 hover:bg-[#0a5663]"
@@ -52,8 +52,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative mx-auto mt-14 min-h-[360px] w-full max-w-2xl">
-            <div className="absolute left-1/2 top-0 w-72 -translate-x-1/2 rounded-[2rem] bg-white p-5 text-left shadow-[0_25px_70px_rgba(6,59,67,0.14)] sm:w-80">
+          <div className="relative min-h-[430px]">
+            <div className="absolute right-0 top-0 w-72 rounded-[2rem] bg-white p-5 shadow-[0_25px_70px_rgba(6,59,67,0.14)] sm:w-80">
               <div className="mb-5 flex items-center justify-between">
                 <span className="rounded-full bg-[#dff4f1] px-3 py-1 text-xs font-black text-[#0a6b70]">
                   London audit
@@ -72,7 +72,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="absolute bottom-5 left-4 w-64 rounded-[1.75rem] bg-[#073f4a] p-5 text-left text-white shadow-[0_25px_70px_rgba(6,59,67,0.22)] sm:left-10">
+            <div className="absolute bottom-9 left-0 w-64 rounded-[1.75rem] bg-[#073f4a] p-5 text-white shadow-[0_25px_70px_rgba(6,59,67,0.22)]">
               <p className="text-sm font-bold text-white/65">Ready to audit</p>
               <p className="mt-3 text-5xl font-black tracking-[-0.06em]">3+</p>
               <p className="mt-1 text-sm font-bold text-white/65">statements uploaded</p>
@@ -81,7 +81,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="absolute bottom-36 right-4 rounded-2xl bg-[#e9f7f5] px-5 py-4 text-sm font-black text-[#0a6b70] shadow-sm sm:right-10">
+            <div className="absolute bottom-40 right-8 rounded-2xl bg-[#e9f7f5] px-5 py-4 text-sm font-black text-[#0a6b70] shadow-sm">
               No screenshots. PDFs only.
             </div>
           </div>

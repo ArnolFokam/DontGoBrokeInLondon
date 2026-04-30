@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -15,6 +16,7 @@ function isPdf(file: File) {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -106,7 +108,7 @@ export default function Home() {
     uploadedFiles.forEach((file) => formData.append("files", file));
 
     const response = await fetch("/api/upload", { method: "POST", body: formData });
-    const data = (await response.json()) as { message?: string };
+    const data = (await response.json()) as { message?: string; uploadId?: string };
 
     setIsLoading(false);
     if (!response.ok) {
@@ -114,12 +116,14 @@ export default function Home() {
       return;
     }
 
+    if (!data.uploadId) {
+      setMessage({ type: "error", text: "Audit was saved but no upload ID was returned." });
+      return;
+    }
+
     setVoiceTranscript("");
     setUploadedFiles([]);
-    setMessage({
-      type: "success",
-      text: "Your documents are being analyzed. Check back soon for your financial audit.",
-    });
+    router.push(`/audit/${data.uploadId}`);
   }
 
   return (
@@ -133,7 +137,8 @@ export default function Home() {
             Tell us what to audit
           </h1>
           <p className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-[#6f898d]">
-            Add optional context, attach at least one PDF, then start.
+            Add optional context: salary, rent, bills, debts, savings goals, and
+            what feels expensive about London.
           </p>
         </header>
 
@@ -148,7 +153,7 @@ export default function Home() {
           <textarea
             value={voiceTranscript}
             onChange={(event) => setVoiceTranscript(event.target.value)}
-            placeholder="Share your financial situation, goals, London worries, income context..."
+            placeholder="Example: salary range, rent, bills, debts, savings target, spending worries, subscriptions, commute costs, dependants, and what you want to improve."
             className="min-h-44 w-full resize-none rounded-[1.25rem] bg-[#fbfffe] p-4 text-sm font-medium leading-6 text-[#083b43] outline-none placeholder:text-[#90a8ab]"
           />
 
