@@ -159,7 +159,16 @@ async function runCursorCheck(check: AuditCheckDefinition, data: ToolData) {
         send: (
           message: string,
           options?: { local?: { force?: boolean } },
-        ) => Promise<{ wait: () => Promise<{ result?: string }> }>;
+        ) => Promise<{
+          stream: () => AsyncGenerator<{
+            type: string;
+            message?: {
+              content?: Array<{ type: string; text?: string }>;
+            };
+            text?: string;
+          }>;
+          wait: () => Promise<{ result?: string }>;
+        }>;
         close: () => void;
       }>;
     };
@@ -174,8 +183,21 @@ async function runCursorCheck(check: AuditCheckDefinition, data: ToolData) {
     const run = await agent.send(buildCursorPrompt(check, data), {
       local: { force: true },
     });
+    let streamedText = "";
+    for await (const event of run.stream()) {
+      if (event.type === "assistant") {
+        streamedText +=
+          event.message?.content
+            ?.filter((block) => block.type === "text")
+            .map((block) => block.text ?? "")
+            .join("") ?? "";
+      }
+      if (event.type === "task" && event.text) {
+        streamedText += event.text;
+      }
+    }
     const result = await run.wait();
-    return parseCursorResult(result.result ?? "", check);
+    return parseCursorResult(streamedText || result.result || "", check);
   } finally {
     agent.close();
   }
