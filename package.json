@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
-    "@cursor/sdk": "^1.0.11",
     "@libsql/client": "^0.17.3",
     "better-sqlite3": "^12.9.0",
     "next": "16.2.4",
@@ -21,8 +20,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "better-sqlite3",
-      "sqlite3"
+      "better-sqlite3"
     ]
   },
   "devDependencies": {

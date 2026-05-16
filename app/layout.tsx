@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Don't Go Broke in London",
-  description: "AI financial audit agent for London life",
+  description: "Turn financial statement PDFs into clear transaction tables",
 };
 
 export default function RootLayout({

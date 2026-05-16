@@ -3,7 +3,7 @@ import {
   type FinancialTransaction,
   parseRevolutStatementPdf,
 } from "@/lib/parsing";
-import { saveAuditUpload } from "@/lib/audits";
+import { saveStatementUpload } from "@/lib/statements";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await saveAuditUpload({
+    await saveStatementUpload({
       uploadId,
       voiceTranscript: voiceTranscriptValue,
       files: parsedFiles,
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Could not save the audit data.",
+        message: "Could not save the statement data.",
         errors: [
           {
             field: "database",
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     success: true,
-    message: "Documents uploaded, validated, and parsed successfully",
+    message: "Statements uploaded, validated, and parsed successfully",
     uploadId,
     fileCount: files.length,
     totalTransactions,

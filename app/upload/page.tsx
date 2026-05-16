@@ -117,13 +117,13 @@ export default function Home() {
     }
 
     if (!data.uploadId) {
-      setMessage({ type: "error", text: "Audit was saved but no upload ID was returned." });
+      setMessage({ type: "error", text: "Statements were saved but no upload ID was returned." });
       return;
     }
 
     setVoiceTranscript("");
     setUploadedFiles([]);
-    router.push(`/audit/${data.uploadId}`);
+    router.push(`/transactions/${data.uploadId}`);
   }
 
   return (
@@ -131,14 +131,13 @@ export default function Home() {
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-3xl flex-col justify-center">
         <header className="mb-5 text-center">
           <p className="text-xs font-black uppercase tracking-[0.24em] text-[#0a6b70]">
-            Financial audit
+            Statement import
           </p>
           <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-[#083b43] sm:text-5xl">
-            Tell us what to audit
+            Upload your statements
           </h1>
           <p className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-[#6f898d]">
-            Add optional context: salary, rent, bills, debts, savings goals, and
-            what feels expensive about London.
+            Add optional context, attach your PDFs, then review the extracted transactions.
           </p>
         </header>
 
@@ -237,7 +236,7 @@ export default function Home() {
               {isLoading && (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               )}
-              {isLoading ? "Analyzing" : "Start audit"}
+              {isLoading ? "Importing" : "Import statements"}
             </button>
           </div>
         </section>
